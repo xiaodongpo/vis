@@ -1,0 +1,78 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>伪基站垃圾短信分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.15.0/plotly.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: 0 auto; }
+        .card { margin-bottom: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>北京市伪基站垃圾短信分析系统</h1>
+
+        <div class="card">
+            <h3>选择日期范围</h3>
+            <input type="date" id="start_date">
+            <input type="date" id="end_date">
+            <button class="btn" id="show_trend_btn">显示短信数量变化</button>
+            <div id="sms_trend"></div>
+        </div>
+
+        <div class="card">
+            <h3>地理分布热力图</h3>
+            <button class="btn" id="show_heatmap_btn">显示热力图</button>
+            <div id="heatmap"></div>
+        </div>
+
+        <div class="card">
+            <h3>垃圾短信词云</h3>
+            <button class="btn" id="show_wordcloud_btn">显示词云</button>
+            <img id="wordcloud_img" src="" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 获取数据
+            $.get("/get_data", function(data) {
+                $('#start_date').val(data.min_date);
+                $('#end_date').val(data.max_date);
+            });
+
+            // 显示短信数量变化
+            $('#show_trend_btn').click(function() {
+                const startDate = $('#start_date').val();
+                const endDate = $('#end_date').val();
+                $.get(`/plot_sms_trend?start_date=${startDate}&end_date=${endDate}`, function(data) {
+                    const graphDiv = document.getElementById('sms_trend');
+                    Plotly.react(graphDiv, data.data, data.layout);
+                });
+            });
+
+            // 显示热力图
+            $('#show_heatmap_btn').click(function() {
+                $.get("/heatmap", function(data) {
+                    $('#heatmap').html(data);
+                });
+            });
+
+            // 显示词云
+            $('#show_wordcloud_btn').click(function() {
+                $.get("/wordcloud", function(data) {
+                    $('#wordcloud_img').attr('src', 'data:image/png;base64,' + data.wordcloud_img);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
